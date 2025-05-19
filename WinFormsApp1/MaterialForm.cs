@@ -1,14 +1,7 @@
 ﻿using Npgsql;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace WinFormsApp1
 {
@@ -16,13 +9,23 @@ namespace WinFormsApp1
     {
         private string connectionString;
         private Action refreshMaterialsCallback;
+        private int? materialId = null; // null — добавление, не null — редактирование
 
-        public MaterialForm(string connStr, Action refreshCallback)
+        // Конструктор для добавления
+        public MaterialForm(string connStr, Action refreshCallback, int? materialId = null)
         {
             InitializeComponent();
             connectionString = connStr;
             refreshMaterialsCallback = refreshCallback;
             LoadMaterialTypes();
+        }
+
+        // Конструктор для редактирования
+        public MaterialForm(string connStr, Action refreshCallback, int materialIdToEdit)
+            : this(connStr, refreshCallback)
+        {
+            materialId = materialIdToEdit;
+            LoadMaterialData(materialIdToEdit);
         }
 
         private void LoadMaterialTypes()
@@ -48,14 +51,39 @@ namespace WinFormsApp1
             }
         }
 
-        private void label6_Click(object sender, EventArgs e)
+        private void LoadMaterialData(int id)
         {
+            try
+            {
+                using (var conn = new NpgsqlConnection(connectionString))
+                {
+                    conn.Open();
+                    var cmd = new NpgsqlCommand(@"
+                        SELECT name, material_type_id, unit_price, quantity, min_quantity, package_quantity, unit_id
+                        FROM materials WHERE id = @id", conn);
+                    cmd.Parameters.AddWithValue("id", id);
 
-        }
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            tbName.Text = reader.GetString(0);
+                            comboBox1.SelectedValue = reader.GetInt32(1);
+                            tbUnitPrice.Text = reader.GetDecimal(2).ToString();
+                            tbQuantity.Text = reader.GetDecimal(3).ToString();
+                            tbMinQuantity.Text = reader.GetDecimal(4).ToString();
+                            tbPackageQuantity.Text = reader.GetDecimal(5).ToString();
+                            tbUnit.Text = reader.GetString(6);
 
-        private void MaterialForm_Load(object sender, EventArgs e)
-        {
-
+                            this.Text = "Редактирование материала";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при загрузке данных материала: " + ex.Message);
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -84,32 +112,50 @@ namespace WinFormsApp1
                 return;
             }
 
+            string confirmationMessage =
+                (materialId.HasValue ? "Обновить материал с данными:" : "Добавить новый материал со следующими данными?") + "\n\n" +
+                $"Тип: {comboBox1.Text}\n" +
+                $"Наименование: {tbName.Text.Trim()}\n" +
+                $"Цена за единицу: {unitPrice}\n" +
+                $"Единица измерения: {tbUnit.Text.Trim()}\n" +
+                $"Количество на складе: {quantity}\n" +
+                $"Минимальное количество: {minQuantity}\n" +
+                $"Количество в упаковке: {packageQuantity}";
+
+            var result = MessageBox.Show(confirmationMessage, "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result != DialogResult.Yes) return;
+
             try
             {
                 using (var conn = new NpgsqlConnection(connectionString))
                 {
                     conn.Open();
-                    string confirmationMessage =
-                                $"Добавить новый материал со следующими данными?\n\n" +
-                                $"Тип: {comboBox1.Text}\n" +
-                                $"Наименование: {tbName.Text.Trim()}\n" +
-                                $"Цена за единицу: {unitPrice}\n" +
-                                $"Единица измерения: {tbUnit.Text.Trim()}\n" +
-                                $"Количество на складе: {quantity}\n" +
-                                $"Минимальное количество: {minQuantity}\n" +
-                                $"Количество в упаковке: {packageQuantity}";
 
-                    var result = MessageBox.Show(confirmationMessage, "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                    if (result != DialogResult.Yes)
+                    NpgsqlCommand cmd;
+                    if (materialId.HasValue)
                     {
-                        return; // пользователь отказался
-                    }
+                        // Редактирование
+                        cmd = new NpgsqlCommand(@"
+                            UPDATE materials SET
+                                name = @name,
+                                material_type_id = @type_id,
+                                unit_price = @price,
+                                quantity = @quantity,
+                                min_quantity = @min_quantity,
+                                package_quantity = @package_quantity,
+                                unit_id = @unit_id
+                            WHERE id = @id", conn);
 
-                    var cmd = new NpgsqlCommand(@"
-                        INSERT INTO materials 
-                        (name, material_type_id, unit_price, quantity, min_quantity, package_quantity, unit_id) 
-                        VALUES (@name, @type_id, @price, @quantity, @min_quantity, @package_quantity, @unit_id)", conn);
+                        cmd.Parameters.AddWithValue("id", materialId.Value);
+                    }
+                    else
+                    {
+                        // Добавление
+                        cmd = new NpgsqlCommand(@"
+                            INSERT INTO materials 
+                            (name, material_type_id, unit_price, quantity, min_quantity, package_quantity, unit_id) 
+                            VALUES (@name, @type_id, @price, @quantity, @min_quantity, @package_quantity, @unit_id)", conn);
+                    }
 
                     cmd.Parameters.AddWithValue("name", tbName.Text.Trim());
                     cmd.Parameters.AddWithValue("type_id", (int)comboBox1.SelectedValue);
@@ -122,13 +168,13 @@ namespace WinFormsApp1
                     cmd.ExecuteNonQuery();
                 }
 
-                MessageBox.Show("Материал успешно добавлен.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                refreshMaterialsCallback(); // Обновление главной формы
+                MessageBox.Show(materialId.HasValue ? "Материал успешно обновлён." : "Материал успешно добавлен.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                refreshMaterialsCallback();
                 this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка при добавлении материала: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Ошибка при сохранении материала: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

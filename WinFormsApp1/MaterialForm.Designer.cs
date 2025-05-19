@@ -51,54 +51,54 @@
             comboBox1.FormattingEnabled = true;
             comboBox1.Location = new Point(184, 49);
             comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(121, 23);
+            comboBox1.Size = new Size(261, 23);
             comboBox1.TabIndex = 0;
             // 
             // tbName
             // 
             tbName.Location = new Point(184, 78);
             tbName.Name = "tbName";
-            tbName.Size = new Size(121, 23);
+            tbName.Size = new Size(261, 23);
             tbName.TabIndex = 1;
             // 
             // tbUnit
             // 
             tbUnit.Location = new Point(184, 136);
             tbUnit.Name = "tbUnit";
-            tbUnit.Size = new Size(121, 23);
+            tbUnit.Size = new Size(261, 23);
             tbUnit.TabIndex = 2;
             // 
             // tbQuantity
             // 
             tbQuantity.Location = new Point(184, 165);
             tbQuantity.Name = "tbQuantity";
-            tbQuantity.Size = new Size(121, 23);
+            tbQuantity.Size = new Size(261, 23);
             tbQuantity.TabIndex = 3;
             // 
             // tbMinQuantity
             // 
             tbMinQuantity.Location = new Point(184, 194);
             tbMinQuantity.Name = "tbMinQuantity";
-            tbMinQuantity.Size = new Size(121, 23);
+            tbMinQuantity.Size = new Size(261, 23);
             tbMinQuantity.TabIndex = 4;
             // 
             // tbPackageQuantity
             // 
             tbPackageQuantity.Location = new Point(184, 223);
             tbPackageQuantity.Name = "tbPackageQuantity";
-            tbPackageQuantity.Size = new Size(121, 23);
+            tbPackageQuantity.Size = new Size(261, 23);
             tbPackageQuantity.TabIndex = 5;
             // 
             // tbUnitPrice
             // 
             tbUnitPrice.Location = new Point(184, 107);
             tbUnitPrice.Name = "tbUnitPrice";
-            tbUnitPrice.Size = new Size(121, 23);
+            tbUnitPrice.Size = new Size(261, 23);
             tbUnitPrice.TabIndex = 6;
             // 
             // button2
             // 
-            button2.Location = new Point(614, 355);
+            button2.Location = new Point(271, 270);
             button2.Name = "button2";
             button2.Size = new Size(174, 23);
             button2.TabIndex = 8;
@@ -108,7 +108,7 @@
             // 
             // button1
             // 
-            button1.Location = new Point(20, 355);
+            button1.Location = new Point(20, 270);
             button1.Name = "button1";
             button1.Size = new Size(233, 23);
             button1.TabIndex = 7;
@@ -169,7 +169,6 @@
             l2.Size = new Size(98, 15);
             l2.TabIndex = 14;
             l2.Text = "Цена за единицу";
-            l2.Click += label6_Click;
             // 
             // label7
             // 
@@ -184,7 +183,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(518, 323);
             Controls.Add(label7);
             Controls.Add(l2);
             Controls.Add(l5);
@@ -202,8 +201,7 @@
             Controls.Add(tbName);
             Controls.Add(comboBox1);
             Name = "MaterialForm";
-            Text = "MaterialForm";
-            Load += MaterialForm_Load;
+            Text = "Добавление материала";
             ResumeLayout(false);
             PerformLayout();
         }
